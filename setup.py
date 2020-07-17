@@ -20,10 +20,10 @@ setup(
     license='BSD-3-Clause',
     url="https://qiime2.org",
     entry_points={
-        'qiime2.plugins':
-        ['q2-mlab=q2_mlab.plugin_setup:plugin']
+        'qiime2.plugins': ['q2-mlab=q2_mlab.plugin_setup:plugin'],
+        'console_scripts': ['orchestrator=q2_mlab.orchestrator:cli'],
     },
     package_data={'q2_mlab': ['assets/index.html', 'citations.bib']},
     zip_safe=False,
-    install_requires=['xgboost', 'lightgbm', 'calour']
+    install_requires=['xgboost', 'lightgbm', 'calour', 'click']
 )
