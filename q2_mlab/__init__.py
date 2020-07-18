@@ -12,6 +12,7 @@ from ._version import get_versions
 from .learningtask import LearningTask, ClassificationTask, RegressionTask
 from ._type import Target, Results
 from ._format import ResultsDirectoryFormat, ResultsFormat
+from ._parameters import ParameterGrids
 
 __version__ = get_versions()["version"]
 
@@ -28,4 +29,5 @@ __all__ = [
     "LearningTask",
     "ClassificationTask",
     "RegressionTask",
+    "ParameterGrids",
 ]

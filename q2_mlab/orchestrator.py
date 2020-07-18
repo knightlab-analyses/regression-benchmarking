@@ -1,74 +1,11 @@
-#!/usr/bin/env python 
-import pandas as pd
-import numpy as np
+#!/usr/bin/env python
 import json
 import os
 from sklearn.model_selection import ParameterGrid
 import click
 from jinja2 import Environment, FileSystemLoader
-import q2_mlab
+from q2_mlab import RegressionTask, ClassificationTask, ParameterGrids
 
-LinearSVC_grid = {
-    'penalty': ['l2'],
-    'tol': [1e-4, 1e-3, 1e-2, 1e-1],
-    'loss': ['hinge', 'squared_hinge'],
-    'random_state': [2018]
-}
-
-LinearSVR_grid = {
-    'C': [1e-4, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e4],
-    'epsilon': [1e-2, 1e-1, 0, 1],
-    'loss': ['squared_epsilon_insensitive', 'epsilon_insensitive'],
-    'random_state': [2018]
-}
-
-RidgeClassifier_grid = {
-    'alpha': [1e-15, 1e-10, 1e-8, 1e-4],
-    'fit_intercept': [True],
-    'normalize':  [True, False],
-    'tol': [1e-1, 1e-2, 1e-3],
-    'solver': ['svd', 'cholesky', 'lsqr',
-               'sparse_cg', 'sag', 'saga'],
-    'random_state': [2018]
-}
-
-RidgeRegressor_grid = {
-    'alpha': [1e-15, 1e-10, 1e-8, 1e-4],
-    'fit_intercept': [True],
-    'normalize': [True, False],
-    'tol': [1e-1, 1e-2, 1e-3],
-    'solver': ['svd', 'cholesky', 'lsqr',
-               'sparse_cg', 'sag', 'saga'],
-    'random_state': [2018]
-}
-
-RandomForestClassifier_grid = {
-    'n_estimators': [1000, 5000],
-    'criterion': ['gini', 'entropy'],
-    'max_features': ['auto', 'sqrt', 'log2'],
-    'max_depth': [None],
-    'n_jobs': [-1],
-    'random_state': [2018],
-    'bootstrap': [True, False],
-    'min_samples_split': list(np.arange(0.01, 1, 0.2)),
-    'min_samples_leaf': list(np.arange(0.01, .5, 0.1)) + [1],
-}
-
-RandomForestRegressor_grid = {
-    'n_estimators': [1000, 5000],
-    'criterion': ['mse'],
-    'max_features': ['auto', 'sqrt', 'log2'],
-    'max_depth': [None],
-    'n_jobs': [-1],
-    'random_state': [2018],
-    'bootstrap': [True, False],
-    'min_samples_split': list(np.arange(0.01, 1, 0.2)),
-    'min_samples_leaf': list(np.arange(0.01, .5, 0.1)) + [1],
-}
-
-classifiers = set(q2_mlab.RegressionTask.algorithms.keys())
-regressors = set(q2_mlab.ClassificationTask.algorithms.keys())
-valid_algorithms = classifiers.union(regressors)
 
 @click.command()
 @click.argument('dataset')
@@ -81,7 +18,7 @@ valid_algorithms = classifiers.union(regressors)
     help="Number of CV repeats",
 )
 @click.option(
-    '--basedir', '-b',
+    '--base_dir', '-b',
     default="/projects/ibm_aihl/ML-benchmark/processed/",
     help="Directory to search for datasets in",
 )
@@ -111,15 +48,30 @@ def cli(
     target,
     algorithm,
     repeats,
-    basedir,
+    base_dir,
     ppn,
     memory,
     wall,
     chunk_size
 ):
-    datatype = preparation
-    base_dir = basedir
-    algorithm_parameters = LinearSVC_grid
+    classifiers = set(RegressionTask.algorithms.keys())
+    regressors = set(ClassificationTask.algorithms.keys())
+    valid_algorithms = classifiers.union(regressors)
+    if algorithm not in valid_algorithms:
+        raise ValueError(
+            "Unrecognized algorithm passed. Algorithms must be one of the "
+            "following: \n" + str(valid_algorithms)
+        )
+
+    try:
+        algorithm_parameters = ParameterGrids[algorithm]
+    except KeyError:
+        print(
+            f'{algorithm} does not have an implemented grid in '
+            'mlab.ParameterGrids'
+        )
+        raise
+
     PPN = ppn
     N_REPEATS = repeats
     GB_MEM = memory
@@ -128,15 +80,26 @@ def cli(
     JOB_NAME = "_".join([dataset, preparation, target, algorithm])
 
     TABLE_FP = os.path.join(
-        base_dir, dataset,  datatype, target, "filtered_rarefied_table.qza"
+        base_dir, dataset,  preparation, target, "filtered_rarefied_table.qza"
     )
-    METADATA_FP = os.path.join(
-        base_dir, dataset, datatype, target, "filtered_metadata.qza"
-    )
-    RESULTS_DIR = os.path.join(
-        base_dir, dataset, datatype, target, algorithm
-    )
+    if not os.path.isdir(TABLE_FP):
+        raise FileNotFoundError(
+            "Table was not found at the expected path: "
+            + TABLE_FP
+        )
 
+    METADATA_FP = os.path.join(
+        base_dir, dataset, preparation, target, "filtered_metadata.qza"
+    )
+    if not os.path.isdir(METADATA_FP):
+        raise FileNotFoundError(
+            "Metadata was not found at the expected path: "
+            + TABLE_FP
+        )
+
+    RESULTS_DIR = os.path.join(
+        base_dir, dataset, preparation, target, algorithm
+    )
     if not os.path.isdir(RESULTS_DIR):
         os.makedirs(RESULTS_DIR)
 
@@ -179,12 +142,13 @@ def cli(
     output_script = os.path.join(
         base_dir,
         dataset,
-        "_".join([datatype, target, algorithm]) + ".sh"
+        "_".join([preparation, target, algorithm]) + ".sh"
     )
     print(output_script)
     print(output_from_parsed_template)
     with open(output_script, "w") as fh:
         fh.write(output_from_parsed_template)
+
 
 if __name__ == "__main__":
     cli()
