@@ -2,7 +2,7 @@ import numpy as np
 
 
 class ParameterGrids:
-    def get():
+    def get(algorithm):
         grids = {
             "LinearSVC": {
                 'penalty': ['l2'],
@@ -69,4 +69,4 @@ class ParameterGrids:
                 'min_samples_leaf': list(np.arange(0.01, .5, 0.1)) + [1],
             },
         }
-        return grids
+        return grids[algorithm]

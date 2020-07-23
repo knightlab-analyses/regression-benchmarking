@@ -64,7 +64,7 @@ def cli(
         )
 
     try:
-        algorithm_parameters = ParameterGrids[algorithm]
+        algorithm_parameters = ParameterGrids.get(algorithm)
     except KeyError:
         print(
             f'{algorithm} does not have an implemented grid in '
