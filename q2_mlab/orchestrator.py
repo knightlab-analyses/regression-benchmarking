@@ -121,7 +121,7 @@ def cli(
                 i += 1
     print("Number of parameters: " + str(len(params_list)))
 
-    env = Environment(loader=FileSystemLoader('templates'))
+    env = Environment(loader=FileSystemLoader('./templates'))
     template = env.get_template('array_job_template2.sh')
 
     output_from_parsed_template = template.render(
