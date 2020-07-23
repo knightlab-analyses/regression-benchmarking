@@ -22,6 +22,7 @@ from sklearn.metrics import (
 )
 
 # Algorithms
+from sklearn.pipeline import Pipeline
 from sklearn.neighbors import KNeighborsRegressor, KNeighborsClassifier
 from sklearn.linear_model import RidgeClassifier, Ridge
 from xgboost import XGBRegressor, XGBClassifier
@@ -68,12 +69,19 @@ class LearningTask(ABC):
             method = entry_point.load()
             self.algorithms.update({name: method})
 
-        self.distance_matrix = distance_matrix
+        self.learner = self.algorithms[algorithm]
         self.params = json.loads(params)
+        if isinstance(self.learner, Pipeline):
+            # Assumes that the last step in the pipeline is the model:
+            prefix = list(self.learner.named_steps)[-1] + "__"
+            # And adds the prefix of that last step to our param dict's keys
+            # so we can access that step's parameters.
+            newparams = {prefix + key: val for key, val in self.params.items()}
+            self.params = newparams
         self.X = table.transpose().matrix_data
         self.metadata = metadata
         self.y = self.metadata.to_numpy()
-        self.learner = self.algorithms[algorithm]
+        self.distance_matrix = distance_matrix
         self.cv_idx = 0
         self.idx = 0
         self.n_repeats = n_repeats
@@ -162,7 +170,8 @@ class ClassificationTask(LearningTask):
 
         # Start timing
         start = time.process_time()
-        model = self.learner(**self.params)
+        model = self.learner()
+        model.set_params(**self.params)
         model.fit(X_train, y_train)
         y_pred = model.predict(X_test)
         # End timimg
@@ -275,9 +284,10 @@ class RegressionTask(LearningTask):
 
         # Start timing
         start = time.process_time()
-        m = self.learner(**self.params)
-        m.fit(X_train, y_train)
-        y_pred = m.predict(X_test)
+        model = self.learner()
+        model.set_params(**self.params)
+        model.fit(X_train, y_train)
+        y_pred = model.predict(X_test)
         # End timimg
         end = time.process_time()
 
