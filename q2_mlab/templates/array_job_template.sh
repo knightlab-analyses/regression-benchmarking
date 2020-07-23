@@ -59,30 +59,19 @@ then
     chunk_size=$final_chunk_size
 fi
 
-
 echo Chunk number ${PBS_ARRAYID} size is ${chunk_size}
-
 
 head -n $offset $input | tail -n $chunk_size > subset${PBS_ARRAYID}.list
 
-PARAM_ARRAY=()
-while IFS= read -r line
+while IFS=$'\t' read -r idx params
 do 
     PARAM_ARRAY+=("$line")
-done < subset${PBS_ARRAYID}.list
-
-rm subset${PBS_ARRAYID}.list
-
-######################## Run the program w/ options: ############################
-for i in "${!PARAM_ARRAY[@]}"
-do
-    echo ${PARAM_ARRAY[$i]} index: $i
-    
     qiime mlab unit-benchmark --i-table {{ TABLE_FP }} \
         --i-metadata {{ METADATA_FP }} \
         --p-algorithm {{ ALGORITHM }} \
-        --p-params '${PARAM_ARRAY[$i]}' \
+        --p-params "${params}" \
         --p-n-repeats {{ N_REPEATS }} \
-        --o-result-table {{ RESULTS_DIR }}/${PBS_ARRAYID}_${i}
-        
-done
+        --o-result-table {{ RESULTS_DIR }}/${PBS_ARRAYID}_${idx} \
+        --verbose
+done < subset${PBS_ARRAYID}.list
+

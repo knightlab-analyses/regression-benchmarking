@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 import json
-import os
-from sklearn.model_selection import ParameterGrid
+import math
 import click
+from os import path, makedirs
+from sklearn.model_selection import ParameterGrid
 from jinja2 import Environment, FileSystemLoader
 from q2_mlab import RegressionTask, ClassificationTask, ParameterGrids
 
@@ -79,50 +80,49 @@ def cli(
     CHUNK_SIZE = chunk_size
     JOB_NAME = "_".join([dataset, preparation, target, algorithm])
 
-    TABLE_FP = os.path.join(
+    TABLE_FP = path.join(
         base_dir, dataset, preparation, target, "filtered_rarefied_table.qza"
     )
-    if not os.path.exists(TABLE_FP):
+    if not path.exists(TABLE_FP):
         raise FileNotFoundError(
             "Table was not found at the expected path: "
             + TABLE_FP
         )
 
-    METADATA_FP = os.path.join(
+    METADATA_FP = path.join(
         base_dir, dataset, preparation, target, "filtered_metadata.qza"
     )
-    if not os.path.exists(METADATA_FP):
+    if not path.exists(METADATA_FP):
         raise FileNotFoundError(
             "Metadata was not found at the expected path: "
             + TABLE_FP
         )
 
-    RESULTS_DIR = os.path.join(
+    RESULTS_DIR = path.join(
         base_dir, dataset, preparation, target, algorithm
     )
-    if not os.path.isdir(RESULTS_DIR):
-        os.makedirs(RESULTS_DIR)
+    if not path.isdir(RESULTS_DIR):
+        makedirs(RESULTS_DIR)
 
-    barnacle_out_dir = os.path.join(base_dir, dataset, "barnacle_output/")
-    if not os.path.isdir(barnacle_out_dir):
-        os.makedirs(barnacle_out_dir)
+    barnacle_out_dir = path.join(base_dir, dataset, "barnacle_output/")
+    if not path.isdir(barnacle_out_dir):
+        makedirs(barnacle_out_dir)
 
-    params_list = list(ParameterGrid(algorithm_parameters))
-    params_list = [json.dumps(params_list[i]) for i in range(len(params_list))]
+    params = list(ParameterGrid(algorithm_parameters))
+    params_list = [json.dumps(param_dict) for param_dict in params]
+    PARAMS_FP = path.join(RESULTS_DIR, algorithm + "_parameters.txt")
 
-    PARAMS_FP = os.path.join(RESULTS_DIR, algorithm + "_parameters.txt")
+    with open(PARAMS_FP, 'w') as f:
+        i = 1
+        for p in params_list:
+            f.write(str(i).zfill(4)+"\t"+p+"\n")
+            i += 1
 
-    if not os.path.exists(PARAMS_FP):
-        print("saving params")
-        with open(PARAMS_FP, 'w') as f:
-            i = 1
-            for p in params_list:
-                f.write(str(i)+"\t"+p+"\n")
-                i += 1
-    print("Number of parameters: " + str(len(params_list)))
-
-    env = Environment(loader=FileSystemLoader('./templates'))
-    template = env.get_template('array_job_template2.sh')
+    mlab_dir = path.dirname(path.abspath(__file__))
+    env = Environment(
+        loader=FileSystemLoader(path.join(mlab_dir, 'templates'))
+    )
+    template = env.get_template('array_job_template.sh')
 
     output_from_parsed_template = template.render(
         JOB_NAME=JOB_NAME,
@@ -139,13 +139,18 @@ def cli(
         RESULTS_DIR=RESULTS_DIR
     )
 
-    output_script = os.path.join(
+    output_script = path.join(
         base_dir,
         dataset,
         "_".join([preparation, target, algorithm]) + ".sh"
     )
     print(output_script)
     print(output_from_parsed_template)
+    print("##########################")
+    print("Saved to: " + output_script)
+    print("Saved params to: "+PARAMS_FP)
+    print("Number of parameters: " + str(len(params_list)))
+    print(f"Max number of jobs with chunk size {CHUNK_SIZE}: " + str(math.floor(len(params_list)/chunk_size)+1))
     with open(output_script, "w") as fh:
         fh.write(output_from_parsed_template)
 

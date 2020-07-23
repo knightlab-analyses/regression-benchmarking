@@ -70,6 +70,7 @@ class LearningTask(ABC):
             self.algorithms.update({name: method})
 
         self.learner = self.algorithms[algorithm]
+        print(params)
         self.params = json.loads(params)
         if isinstance(self.learner, Pipeline):
             # Assumes that the last step in the pipeline is the model:
