@@ -80,9 +80,9 @@ def cli(
     JOB_NAME = "_".join([dataset, preparation, target, algorithm])
 
     TABLE_FP = os.path.join(
-        base_dir, dataset,  preparation, target, "filtered_rarefied_table.qza"
+        base_dir, dataset, preparation, target, "filtered_rarefied_table.qza"
     )
-    if not os.path.isdir(TABLE_FP):
+    if not os.path.exists(TABLE_FP):
         raise FileNotFoundError(
             "Table was not found at the expected path: "
             + TABLE_FP
@@ -91,7 +91,7 @@ def cli(
     METADATA_FP = os.path.join(
         base_dir, dataset, preparation, target, "filtered_metadata.qza"
     )
-    if not os.path.isdir(METADATA_FP):
+    if not os.path.exists(METADATA_FP):
         raise FileNotFoundError(
             "Metadata was not found at the expected path: "
             + TABLE_FP
