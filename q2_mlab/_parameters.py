@@ -1,4 +1,5 @@
 import numpy as np
+from sklearn.model_selection import ParameterGrid
 
 
 class ParameterGrids:
@@ -49,24 +50,29 @@ class ParameterGrids:
             "RandomForestClassifier": {
                 "n_estimators": [1000, 5000],
                 "criterion": ["gini", "entropy"],
-                "max_features": ["sqrt", "log2", None] + list(np.arange(0.01, 1, 0.2)),
+                "max_features": ["sqrt", "log2", None] + list(np.arange(0.2, 1, 0.2)),
+                "max_samples": [0.25, 0.5, 0.75, None],
                 "max_depth": [None],
                 "n_jobs": [-1],
-                "random_state": [2018],
-                "bootstrap": [True, False],
-                "min_samples_split": list(np.arange(0.01, 1, 0.2)),
-                "min_samples_leaf": list(np.arange(0.01, 0.5, 0.1)) + [1],
+                "random_state": [2020],
+                "bootstrap": [True],
+                "min_samples_split": list(np.arange(0.2, 1, 0.2)),
+                "min_samples_leaf": list(np.arange(0.01, 0.5, 0.2)) + [1],
             },
             "RandomForestRegressor": {
                 'n_estimators': [1000, 5000],
-                'criterion': ['mse'],
-                "max_features": ["sqrt", "log2", None] + list(np.arange(0.01, 1, 0.2)),
+                'criterion': ['mse', 'mae'],
+                "max_features": ["sqrt", "log2", None] + list(np.arange(0.2, 1, 0.2)),
+                "max_samples": [0.25, 0.5, 0.75, None],
                 'max_depth': [None],
                 'n_jobs': [-1],
-                'random_state': [2018],
-                'bootstrap': [True, False],
-                'min_samples_split': list(np.arange(0.01, 1, 0.2)),
-                'min_samples_leaf': list(np.arange(0.01, .5, 0.1)) + [1],
+                'random_state': [2020],
+                'bootstrap': [True],
+                'min_samples_split': list(np.arange(0.2, 1, 0.2)) + [2],
+                'min_samples_leaf': list(np.arange(0.01, .5, 0.2)) + [1],
             },
         }
         return grids[algorithm]
+
+    def get_size(algorithm):
+        return len(list(ParameterGrid(ParameterGrids.get(algorithm))))
