@@ -60,7 +60,7 @@ class ParameterGrids:
             "RandomForestRegressor": {
                 'n_estimators': [1000, 5000],
                 'criterion': ['mse'],
-                'max_features': ['auto', 'sqrt', 'log2'],
+                "max_features": ["sqrt", "log2", None] + list(np.arange(0.01, 1, 0.2)),
                 'max_depth': [None],
                 'n_jobs': [-1],
                 'random_state': [2018],
