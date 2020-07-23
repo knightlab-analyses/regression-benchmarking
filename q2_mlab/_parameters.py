@@ -56,7 +56,7 @@ class ParameterGrids:
                 "n_jobs": [-1],
                 "random_state": [2020],
                 "bootstrap": [True],
-                "min_samples_split": list(np.arange(0.2, 1, 0.2)),
+                "min_samples_split": list(np.arange(0.2, 1, 0.2)) + [2],
                 "min_samples_leaf": list(np.arange(0.01, 0.5, 0.2)) + [1],
             },
             "RandomForestRegressor": {
