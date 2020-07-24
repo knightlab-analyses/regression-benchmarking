@@ -2,6 +2,7 @@
 import json
 import math
 import click
+import random
 from os import path, makedirs
 from sklearn.model_selection import ParameterGrid
 from jinja2 import Environment, FileSystemLoader
@@ -35,13 +36,18 @@ from q2_mlab import RegressionTask, ClassificationTask, ParameterGrids
 )
 @click.option(
     '--wall',
-    default=10,
+    default=50,
     help="Walltime in hours for job script",
 )
 @click.option(
     '--chunk_size',
     default=100,
     help="Number of params to run in one job for job script",
+)
+@click.option(
+    '--randomize',
+    default=True,
+    help="Randomly shuffle the order of the hyperparameter list",
 )
 def cli(
     dataset,
@@ -53,7 +59,8 @@ def cli(
     ppn,
     memory,
     wall,
-    chunk_size
+    chunk_size,
+    randomize
 ):
     classifiers = set(RegressionTask.algorithms.keys())
     regressors = set(ClassificationTask.algorithms.keys())
@@ -111,6 +118,10 @@ def cli(
     params = list(ParameterGrid(algorithm_parameters))
     params_list = [json.dumps(param_dict) for param_dict in params]
     PARAMS_FP = path.join(RESULTS_DIR, algorithm + "_parameters.txt")
+    
+    random.seed(2021)
+    if randomize:
+            random.shuffle(params_list)
 
     with open(PARAMS_FP, 'w') as f:
         i = 1

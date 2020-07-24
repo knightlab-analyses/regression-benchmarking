@@ -71,7 +71,7 @@ do
         --p-algorithm {{ ALGORITHM }} \
         --p-params "${params}" \
         --p-n-repeats {{ N_REPEATS }} \
-        --o-result-table {{ RESULTS_DIR }}/${PBS_ARRAYID}_${idx} \
+        --o-result-table {{ RESULTS_DIR }}/${idx}_chunk_${PBS_ARRAYID} \
         --verbose
 done < subset${PBS_ARRAYID}.list
 
