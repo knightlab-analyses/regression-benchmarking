@@ -74,5 +74,30 @@ class ParameterGrids:
         }
         return grids[algorithm]
 
+    def get_reduced(algorithm):
+        grids = {
+            "RandomForestClassifier": {
+                "n_estimators": [5000],
+                "criterion": ["gini"],
+                "max_features": ["sqrt", "log2", None] + list(np.arange(0.2, 1, 0.2)),
+                "max_samples": [0.25, 0.5, 0.75, None],
+                "max_depth": [None],
+                "n_jobs": [-1],
+                "random_state": [2020],
+                "bootstrap": [True],
+            },
+            "RandomForestRegressor": {
+                'n_estimators': [5000],
+                'criterion': ['mse'],
+                "max_features": ["sqrt", "log2", None] + list(np.arange(0.2, 1, 0.2)),
+                "max_samples": [0.25, 0.5, 0.75, None],
+                'max_depth': [None],
+                'n_jobs': [-1],
+                'random_state': [2020],
+                'bootstrap': [True],
+            },
+        }
+        return grids[algorithm]
+
     def get_size(algorithm):
         return len(list(ParameterGrid(ParameterGrids.get(algorithm))))
