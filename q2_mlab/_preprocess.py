@@ -59,7 +59,8 @@ def preprocess(
     initial_ids_to_keep = table.view(biom.Table).ids()
     table_id_set = set(initial_ids_to_keep)
     metadata_id_set = set(metadata.ids)
-    num_shared_ids = len(table_id_set.intersection(metadata_id_set))
+    shared_ids = table_id_set.intersection(metadata_id_set)
+    num_shared_ids=len(shared_ids)
     if num_shared_ids == 0:
         raise ValueError("No sample IDs are shared between Table and Metadata")
     print(
@@ -69,7 +70,7 @@ def preprocess(
 
     # Filter metadata by samples in table
     print("Filtering Metadata by samples in table")
-    filteredmetadata = metadata.filter_ids(ids_to_keep=initial_ids_to_keep)
+    filteredmetadata = metadata.filter_ids(ids_to_keep=shared_ids)
     print_datasize(table, filteredmetadata)
 
     # Filter samples from metadata where NaN in target_variable column
