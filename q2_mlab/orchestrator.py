@@ -15,14 +15,14 @@ from q2_mlab import RegressionTask, ClassificationTask, ParameterGrids
 @click.argument('target')
 @click.argument('algorithm',)
 @click.option(
+    '--base_dir', '-b',
+    default="./processed/",
+    help="Directory to search for datasets in",
+)
+@click.option(
     '--repeats', '-r',
     default=3,
     help="Number of CV repeats",
-)
-@click.option(
-    '--base_dir', '-b',
-    default="/projects/ibm_aihl/ML-benchmark/processed/",
-    help="Directory to search for datasets in",
 )
 @click.option(
     '--ppn',
@@ -49,6 +49,11 @@ from q2_mlab import RegressionTask, ClassificationTask, ParameterGrids
     default=True,
     help="Randomly shuffle the order of the hyperparameter list",
 )
+@click.option(
+    '--reduced',
+    default=False,
+    help="If a reduced parameter grid is available, run the reduced grid.",
+)
 def cli(
     dataset,
     preparation,
@@ -60,7 +65,8 @@ def cli(
     memory,
     wall,
     chunk_size,
-    randomize
+    randomize,
+    reduced
 ):
     classifiers = set(RegressionTask.algorithms.keys())
     regressors = set(ClassificationTask.algorithms.keys())
@@ -71,14 +77,25 @@ def cli(
             "following: \n" + str(valid_algorithms)
         )
 
-    try:
-        algorithm_parameters = ParameterGrids.get(algorithm)
-    except KeyError:
-        print(
-            f'{algorithm} does not have an implemented grid in '
-            'mlab.ParameterGrids'
-        )
-        raise
+    if reduced:
+        try:
+            algorithm_parameters = ParameterGrids.get_reduced(algorithm)
+        except KeyError:
+            print(
+                f'{algorithm} does not have a reduced grid implemented grid '
+                'in mlab.ParameterGrids'
+            )
+            raise
+
+    else:
+        try:
+            algorithm_parameters = ParameterGrids.get(algorithm)
+        except KeyError:
+            print(
+                f'{algorithm} does not have a grid implemented in '
+                'mlab.ParameterGrids'
+            )
+            raise
 
     PPN = ppn
     N_REPEATS = repeats
@@ -118,7 +135,7 @@ def cli(
     params = list(ParameterGrid(algorithm_parameters))
     params_list = [json.dumps(param_dict) for param_dict in params]
     PARAMS_FP = path.join(RESULTS_DIR, algorithm + "_parameters.txt")
-    
+
     random.seed(2021)
     if randomize:
             random.shuffle(params_list)

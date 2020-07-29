@@ -60,7 +60,7 @@ def preprocess(
     table_id_set = set(initial_ids_to_keep)
     metadata_id_set = set(metadata.ids)
     shared_ids = table_id_set.intersection(metadata_id_set)
-    num_shared_ids=len(shared_ids)
+    num_shared_ids = len(shared_ids)
     if num_shared_ids == 0:
         raise ValueError("No sample IDs are shared between Table and Metadata")
     print(
