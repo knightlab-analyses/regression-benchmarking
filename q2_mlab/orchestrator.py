@@ -45,12 +45,12 @@ from q2_mlab import RegressionTask, ClassificationTask, ParameterGrids
     help="Number of params to run in one job for job script",
 )
 @click.option(
-    '--randomize',
+    '--randomize/--no-randomize',
     default=True,
     help="Randomly shuffle the order of the hyperparameter list",
 )
 @click.option(
-    '--reduced',
+    '--reduced/--no-reduced',
     default=False,
     help="If a reduced parameter grid is available, run the reduced grid.",
 )
