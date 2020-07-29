@@ -75,3 +75,5 @@ do
         --verbose
 done < subset${PBS_ARRAYID}.list
 
+rm subset${PBS_ARRAYID}.list
+
