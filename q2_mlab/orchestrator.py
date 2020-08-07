@@ -54,11 +54,16 @@ from q2_mlab import RegressionTask, ClassificationTask, ParameterGrids
     default=False,
     help="If a reduced parameter grid is available, run the reduced grid.",
 )
+@click.option(
+    '--force/--no-force',
+    default=False,
+    help="Overwrite existing results.",
+)
 def cli(
     dataset,
     preparation,
     target,
-    algorithm,
+    ALGORITHM,
     repeats,
     base_dir,
     ppn,
@@ -66,12 +71,13 @@ def cli(
     wall,
     chunk_size,
     randomize,
-    reduced
+    reduced,
+    force
 ):
     classifiers = set(RegressionTask.algorithms.keys())
     regressors = set(ClassificationTask.algorithms.keys())
     valid_algorithms = classifiers.union(regressors)
-    if algorithm not in valid_algorithms:
+    if ALGORITHM not in valid_algorithms:
         raise ValueError(
             "Unrecognized algorithm passed. Algorithms must be one of the "
             "following: \n" + str(valid_algorithms)
@@ -79,20 +85,20 @@ def cli(
 
     if reduced:
         try:
-            algorithm_parameters = ParameterGrids.get_reduced(algorithm)
+            algorithm_parameters = ParameterGrids.get_reduced(ALGORITHM)
         except KeyError:
             print(
-                f'{algorithm} does not have a reduced grid implemented grid '
+                f'{ALGORITHM} does not have a reduced grid implemented grid '
                 'in mlab.ParameterGrids'
             )
             raise
 
     else:
         try:
-            algorithm_parameters = ParameterGrids.get(algorithm)
+            algorithm_parameters = ParameterGrids.get(ALGORITHM)
         except KeyError:
             print(
-                f'{algorithm} does not have a grid implemented in '
+                f'{ALGORITHM} does not have a grid implemented in '
                 'mlab.ParameterGrids'
             )
             raise
@@ -102,7 +108,8 @@ def cli(
     GB_MEM = memory
     WALLTIME_HRS = wall
     CHUNK_SIZE = chunk_size
-    JOB_NAME = "_".join([dataset, preparation, target, algorithm])
+    JOB_NAME = "_".join([dataset, preparation, target, ALGORITHM])
+    FORCE = str(force).lower()
 
     TABLE_FP = path.join(
         base_dir, dataset, preparation, target, "filtered_rarefied_table.qza"
@@ -123,38 +130,36 @@ def cli(
         )
 
     RESULTS_DIR = path.join(
-        base_dir, dataset, preparation, target, algorithm
+        base_dir, dataset, preparation, target, ALGORITHM
     )
     if not path.isdir(RESULTS_DIR):
         makedirs(RESULTS_DIR)
 
-    barnacle_out_dir = path.join(base_dir, dataset, "barnacle_output/")
-    if not path.isdir(barnacle_out_dir):
-        makedirs(barnacle_out_dir)
+    BARNACLE_OUT_DIR = path.join(base_dir, dataset, "barnacle_output/")
+    if not path.isdir(BARNACLE_OUT_DIR):
+        makedirs(BARNACLE_OUT_DIR)
 
     params = list(ParameterGrid(algorithm_parameters))
     params_list = [json.dumps(param_dict) for param_dict in params]
-    PARAMS_FP = path.join(RESULTS_DIR, algorithm + "_parameters.txt")
+    PARAMS_FP = path.join(RESULTS_DIR, ALGORITHM + "_parameters.txt")
+    N_PARAMS = len(params_list)
+    N_CHUNKS = math.floor(N_PARAMS/CHUNK_SIZE)+1
+    REMAINDER = N_PARAMS % N_CHUNKS
 
     random.seed(2021)
     if randomize:
-            random.shuffle(params_list)
-
-    with open(PARAMS_FP, 'w') as f:
-        i = 1
-        for p in params_list:
-            f.write(str(i).zfill(4)+"\t"+p+"\n")
-            i += 1
+        random.shuffle(params_list)
 
     mlab_dir = path.dirname(path.abspath(__file__))
     env = Environment(
         loader=FileSystemLoader(path.join(mlab_dir, 'templates'))
     )
-    template = env.get_template('array_job_template.sh')
+    job_template = env.get_template('array_job_template.sh')
+    info_template = env.get_template('info.txt')
 
-    output_from_parsed_template = template.render(
+    output_from_job_template = job_template.render(
         JOB_NAME=JOB_NAME,
-        STD_ERR_OUT=barnacle_out_dir,
+        STD_ERR_OUT=BARNACLE_OUT_DIR,
         PPN=PPN,
         GB_MEM=GB_MEM,
         WALLTIME_HRS=WALLTIME_HRS,
@@ -162,25 +167,50 @@ def cli(
         CHUNK_SIZE=CHUNK_SIZE,
         TABLE_FP=TABLE_FP,
         METADATA_FP=METADATA_FP,
-        ALGORITHM=algorithm,
+        ALGORITHM=ALGORITHM,
         N_REPEATS=N_REPEATS,
-        RESULTS_DIR=RESULTS_DIR
+        RESULTS_DIR=RESULTS_DIR,
+        FORCE_OVERWRITE=FORCE,
+    )
+
+    output_from_info_template = info_template.render(
+        PARAMS_FP=PARAMS_FP,
+        CHUNK_SIZE=CHUNK_SIZE,
+        N_PARAMS=N_PARAMS,
+        REMAINDER=REMAINDER,
+        N_CHUNKS=N_CHUNKS
     )
 
     output_script = path.join(
         base_dir,
         dataset,
-        "_".join([preparation, target, algorithm]) + ".sh"
+        "_".join([preparation, target, ALGORITHM]) + ".sh"
+    )
+    info_doc = path.join(
+        base_dir,
+        dataset,
+        "info.txt"
     )
     print(output_script)
-    print(output_from_parsed_template)
+    print(output_from_job_template)
     print("##########################")
     print("Saved to: " + output_script)
     print("Saved params to: "+PARAMS_FP)
     print("Number of parameters: " + str(len(params_list)))
-    print(f"Max number of jobs with chunk size {CHUNK_SIZE}: " + str(math.floor(len(params_list)/chunk_size)+1))
-    with open(output_script, "w") as fh:
-        fh.write(output_from_parsed_template)
+    print(f"Max number of jobs with chunk size {CHUNK_SIZE}: " + N_CHUNKS))
+
+    if force or not (path.exists(output_script) and path.exists(PARAMS_FP)):
+        with open(output_script, "w") as fh:
+            fh.write(output_from_job_template)
+        with open(info_doc, "w") as fh:
+            fh.write(output_from_info_template)
+        with open(PARAMS_FP, 'w') as fh:
+            i = 1
+            for p in params_list:
+                fh.write(str(i).zfill(4)+"\t"+p+"\n")
+                i += 1
+    else:
+        print("Files already exist: \n" + output_script + "\n" + PARAMS_FP)
 
 
 if __name__ == "__main__":

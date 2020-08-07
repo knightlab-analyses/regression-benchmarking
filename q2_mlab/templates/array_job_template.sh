@@ -63,16 +63,22 @@ echo Chunk number ${PBS_ARRAYID} size is ${chunk_size}
 
 head -n $offset $input | tail -n $chunk_size > subset${PBS_ARRAYID}.list
 
+FORCE={{ FORCE_OVERWRITE }}
 while IFS=$'\t' read -r idx params
 do 
-    PARAM_ARRAY+=("$line")
-    qiime mlab unit-benchmark --i-table {{ TABLE_FP }} \
-        --i-metadata {{ METADATA_FP }} \
-        --p-algorithm {{ ALGORITHM }} \
-        --p-params "${params}" \
-        --p-n-repeats {{ N_REPEATS }} \
-        --o-result-table {{ RESULTS_DIR }}/${idx}_chunk_${PBS_ARRAYID} \
-        --verbose
+    RESULTS={{ RESULTS_DIR }}/${idx}_chunk_${PBS_ARRAYID}
+    if [ -f $RESULTS && ${FORCE} = false ]
+    then
+        echo $RESULTS already exists, execution skipped
+    else
+        qiime mlab unit-benchmark --i-table {{ TABLE_FP }} \
+            --i-metadata {{ METADATA_FP }} \
+            --p-algorithm {{ ALGORITHM }} \
+            --p-params "${params}" \
+            --p-n-repeats {{ N_REPEATS }} \
+            --o-result-table ${RESULTS} \
+            --verbose
+    fi
 done < subset${PBS_ARRAYID}.list
 
 rm subset${PBS_ARRAYID}.list
