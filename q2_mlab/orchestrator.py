@@ -63,7 +63,7 @@ def cli(
     dataset,
     preparation,
     target,
-    ALGORITHM,
+    algorithm,
     repeats,
     base_dir,
     ppn,
@@ -77,6 +77,7 @@ def cli(
     classifiers = set(RegressionTask.algorithms.keys())
     regressors = set(ClassificationTask.algorithms.keys())
     valid_algorithms = classifiers.union(regressors)
+    ALGORITHM = algorithm
     if ALGORITHM not in valid_algorithms:
         raise ValueError(
             "Unrecognized algorithm passed. Algorithms must be one of the "
@@ -197,7 +198,7 @@ def cli(
     print("Saved to: " + output_script)
     print("Saved params to: "+PARAMS_FP)
     print("Number of parameters: " + str(len(params_list)))
-    print(f"Max number of jobs with chunk size {CHUNK_SIZE}: " + N_CHUNKS))
+    print(f"Max number of jobs with chunk size {CHUNK_SIZE}: " + str(N_CHUNKS))
 
     if force or not (path.exists(output_script) and path.exists(PARAMS_FP)):
         with open(output_script, "w") as fh:
