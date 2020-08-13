@@ -195,7 +195,7 @@ def cli(
     )
 
     print(output_script)
-    print(output_from_job_template)
+    # print(output_from_job_template)
     print("##########################")
     print("Number of parameters: " + str(len(params_list)))
     print(f"Max number of jobs with chunk size {CHUNK_SIZE}: " + str(N_CHUNKS))

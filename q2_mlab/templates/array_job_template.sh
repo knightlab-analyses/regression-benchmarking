@@ -67,7 +67,7 @@ FORCE={{ FORCE_OVERWRITE }}
 while IFS=$'\t' read -r idx params
 do 
     RESULTS={{ RESULTS_DIR }}/${idx}_chunk_${PBS_ARRAYID}
-    if [ -f $RESULTS && ${FORCE}=false ]
+    if [[ -f $RESULTS.qza && ${FORCE} = false ]]
     then
         echo $RESULTS already exists, execution skipped
     else
