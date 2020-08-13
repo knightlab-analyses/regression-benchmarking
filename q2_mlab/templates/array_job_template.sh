@@ -14,7 +14,7 @@
 
 ### Specify the number of cpus for your job. 1 processor on 1 node for benchmarking
 ### Also specifies to pick any node brncl-01 through brncl-32
-#PBS -l nodes=1+intel:ppn={{ PPN }}
+#PBS -l nodes=1:ppn={{ PPN }}
 
 ### Tell PBS how much memory you expct to use. Use units of 'b','kb', 'mb' or 'gb'.
 #PBS -l mem={{ GB_MEM }}gb
@@ -67,7 +67,7 @@ FORCE={{ FORCE_OVERWRITE }}
 while IFS=$'\t' read -r idx params
 do 
     RESULTS={{ RESULTS_DIR }}/${idx}_chunk_${PBS_ARRAYID}
-    if [ -f $RESULTS && ${FORCE} = false ]
+    if [ -f $RESULTS && ${FORCE}=false ]
     then
         echo $RESULTS already exists, execution skipped
     else

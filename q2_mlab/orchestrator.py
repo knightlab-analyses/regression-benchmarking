@@ -144,8 +144,8 @@ def cli(
     params_list = [json.dumps(param_dict) for param_dict in params]
     PARAMS_FP = path.join(RESULTS_DIR, ALGORITHM + "_parameters.txt")
     N_PARAMS = len(params_list)
-    N_CHUNKS = math.floor(N_PARAMS/CHUNK_SIZE)+1
-    REMAINDER = N_PARAMS % N_CHUNKS
+    N_CHUNKS = math.ceil(N_PARAMS/CHUNK_SIZE)
+    REMAINDER = N_PARAMS % CHUNK_SIZE
 
     random.seed(2021)
     if randomize:
@@ -187,32 +187,30 @@ def cli(
         dataset,
         "_".join([preparation, target, ALGORITHM]) + ".sh"
     )
+
     info_doc = path.join(
         base_dir,
         dataset,
-        "info.txt"
+        "_".join([preparation, target, ALGORITHM]) + "_info.txt"
     )
+
     print(output_script)
     print(output_from_job_template)
     print("##########################")
-    print("Saved to: " + output_script)
-    print("Saved params to: "+PARAMS_FP)
     print("Number of parameters: " + str(len(params_list)))
     print(f"Max number of jobs with chunk size {CHUNK_SIZE}: " + str(N_CHUNKS))
-
-    if force or not (path.exists(output_script) and path.exists(PARAMS_FP)):
-        with open(output_script, "w") as fh:
-            fh.write(output_from_job_template)
-        with open(info_doc, "w") as fh:
+    with open(info_doc, "w") as fh:
             fh.write(output_from_info_template)
-        with open(PARAMS_FP, 'w') as fh:
-            i = 1
-            for p in params_list:
-                fh.write(str(i).zfill(4)+"\t"+p+"\n")
-                i += 1
-    else:
-        print("Files already exist: \n" + output_script + "\n" + PARAMS_FP)
-
+    print("Saved info to: " + info_doc)
+    with open(PARAMS_FP, 'w') as fh:
+        i = 1
+        for p in params_list:
+            fh.write(str(i).zfill(4)+"\t"+p+"\n")
+            i += 1
+    print("Saved params to: " + PARAMS_FP)
+    with open(output_script, "w") as fh:
+        fh.write(output_from_job_template)
+    print("Saved to: " + output_script)
 
 if __name__ == "__main__":
     cli()

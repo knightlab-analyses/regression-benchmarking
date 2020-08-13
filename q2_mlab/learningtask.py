@@ -41,7 +41,6 @@ from sklearn.ensemble import (
 )
 from sklearn.mixture import BayesianGaussianMixture
 from sklearn.naive_bayes import ComplementNB
-from lightgbm import LGBMClassifier, LGBMRegressor
 from sklearn.neural_network import MLPClassifier, MLPRegressor
 from sklearn.linear_model import ElasticNet, Lasso
 
@@ -130,7 +129,6 @@ class ClassificationTask(LearningTask):
         "BaggingClassifier": BaggingClassifier,
         "ExtraTreesClassifier": ExtraTreesClassifier,
         "HistGradientBoostingClassifier": HistGradientBoostingClassifier,
-        "LGBMClassifier": LGBMClassifier,
         "BayesianGaussianMixture": BayesianGaussianMixture,
         "ComplementNB": ComplementNB,
         "BayesianGaussianMixture": BayesianGaussianMixture,
@@ -247,7 +245,6 @@ class RegressionTask(LearningTask):
         "BaggingRegressor": BaggingRegressor,
         "ExtraTreesRegressor": ExtraTreesRegressor,
         "HistGradientBoostingRegressor": HistGradientBoostingRegressor,
-        "LGBMRegressor": LGBMRegressor,
         "LinearSVR": LinearSVR,
         "RidgeRegressor": Ridge,
         "MLPRegressor": MLPRegressor,

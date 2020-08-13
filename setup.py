@@ -27,5 +27,5 @@ setup(
                               'citations.bib',
                               'templates/array_job_template.sh']},
     zip_safe=False,
-    install_requires=['xgboost', 'lightgbm', 'calour', 'click']
+    install_requires=['xgboost', 'calour', 'click']
 )
