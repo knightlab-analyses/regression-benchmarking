@@ -16,7 +16,6 @@ from q2_mlab import RegressionTask, ClassificationTask, ParameterGrids
 @click.argument('algorithm',)
 @click.option(
     '--base_dir', '-b',
-    default="./processed/",
     help="Directory to search for datasets in",
 )
 @click.option(
