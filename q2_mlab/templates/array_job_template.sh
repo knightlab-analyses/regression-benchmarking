@@ -14,7 +14,7 @@
 
 ### Specify the number of cpus for your job. 1 processor on 1 node for benchmarking
 ### Also specifies to pick any node brncl-01 through brncl-32
-#PBS -l nodes=1:ppn={{ PPN }}
+#PBS -l nodes=1:ppn={{ PPN }}:intel
 
 ### Tell PBS how much memory you expct to use. Use units of 'b','kb', 'mb' or 'gb'.
 #PBS -l mem={{ GB_MEM }}gb
@@ -80,6 +80,3 @@ do
             --verbose
     fi
 done < subset${PBS_ARRAYID}.list
-
-rm subset${PBS_ARRAYID}.list
-
