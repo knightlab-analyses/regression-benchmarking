@@ -26,7 +26,7 @@
 ### from your home directory.
 
 cd $PBS_O_WORKDIR
-source activate qiime2-2020.6
+source activate qiime2-2020.8
 echo Working directory is $PBS_O_WORKDIR
 
 # Calculate the number of processors allocated to this run.
@@ -61,7 +61,9 @@ fi
 
 echo Chunk number ${PBS_ARRAYID} size is ${chunk_size}
 
-head -n $offset $input | tail -n $chunk_size > subset${PBS_ARRAYID}.list
+SUBSETLIST={{ RESULTS_DIR }}/subset${PBS_ARRAYID}.list
+
+head -n $offset $input | tail -n $chunk_size > ${SUBSETLIST}
 
 FORCE={{ FORCE_OVERWRITE }}
 while IFS=$'\t' read -r idx params
@@ -79,4 +81,4 @@ do
             --o-result-table ${RESULTS} \
             --verbose
     fi
-done < subset${PBS_ARRAYID}.list
+done < ${SUBSETLIST}

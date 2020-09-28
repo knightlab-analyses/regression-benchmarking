@@ -69,3 +69,6 @@ target/
 *.qzv
 q2_mlab/tests/.DS_Store
 .DS_Store
+
+# PyCharm
+.idea/

@@ -62,9 +62,12 @@ class PreprocessingTests(TestPluginBase):
         self.assertTrue(str(results[5].type) == 'DistanceMatrix')
         self.assertTrue(str(results[6].type) == 'DistanceMatrix')
 
-        phylo_dm_string = "DistanceMatrix % Properties('phylogenetic')"
-        self.assertTrue(str(results[7].type) == phylo_dm_string)
-        self.assertTrue(str(results[8].type) == phylo_dm_string)
+        phylo_dm_strings = ["DistanceMatrix % Properties('phylogenetic')",
+                            "DistanceMatrix"]
+        # QIIME2 2020.8 changes beta_phylogenetic to a Pipeline and
+        # changes the resulting artifact type to "DistanceMatrix"
+        self.assertTrue(str(results[7].type) in phylo_dm_strings)
+        self.assertTrue(str(results[8].type) in phylo_dm_strings)
 
         self.assertEqual(
             results[0].view(biom.Table).shape[1],

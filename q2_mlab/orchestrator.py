@@ -13,10 +13,11 @@ from q2_mlab import RegressionTask, ClassificationTask, ParameterGrids
 @click.argument('dataset')
 @click.argument('preparation')
 @click.argument('target')
-@click.argument('algorithm',)
+@click.argument('algorithm')
 @click.option(
     '--base_dir', '-b',
     help="Directory to search for datasets in",
+    required=True
 )
 @click.option(
     '--repeats', '-r',

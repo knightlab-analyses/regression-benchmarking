@@ -21,11 +21,25 @@ setup(
     url="https://qiime2.org",
     entry_points={
         'qiime2.plugins': ['q2-mlab=q2_mlab.plugin_setup:plugin'],
-        'console_scripts': ['orchestrator=q2_mlab.orchestrator:cli'],
+        'console_scripts': ['orchestrator=q2_mlab.orchestrator:cli',
+                            'mlab-db=q2_mlab.db.cli:mlab_db',
+                            ],
     },
-    package_data={'q2_mlab': ['assets/index.html', 
+    package_data={'q2_mlab': ['assets/index.html',
                               'citations.bib',
                               'templates/array_job_template.sh']},
     zip_safe=False,
-    install_requires=['xgboost', 'calour', 'click']
+    install_requires=[
+        'xgboost',
+        'calour',
+        'click',
+        'scikit-learn',
+        'numpy',
+        'pandas',
+        'jinja2',
+        'tqdm',
+        'biom-format',
+        'lightgbm',
+        'sqlalchemy',
+    ]
 )

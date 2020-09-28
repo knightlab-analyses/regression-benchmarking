@@ -165,7 +165,7 @@ def preprocess(
                 table=filtered_rarefied_table,
                 phylogeny=phylogeny,
                 metric=metric,
-                n_jobs=n_jobs,
+                threads=n_jobs,
             )
             results += beta_phylo_results
     else:
