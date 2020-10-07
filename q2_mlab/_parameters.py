@@ -18,7 +18,7 @@ class ParameterGrids:
     hidden_layer_sizes = [10, 50, 100, 200, 500]
     for r in range(1, 4):
         for comb in combinations(hidden_layer_sizes, r):
-            mlp_hidden_layer_grids.append(hidden_layer_sizes)
+            mlp_hidden_layer_grids.append(comb)
 
     # Notes:
     # fit_intercept - set to True in all cases due to statistical properties

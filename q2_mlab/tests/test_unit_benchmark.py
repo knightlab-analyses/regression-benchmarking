@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import biom
 import json
 from os import path
@@ -188,7 +189,53 @@ class UnitBenchmarkTests(TestPluginBase):
         )
 
         self.assertTrue(best_model)
-        self.assertEquals(results['ACCURACY'].max(), best_accuracy)
+        self.assertEqual(results['ACCURACY'].max(), best_accuracy)
+
+    def test_result_table(self):
+
+        n_features = 10
+        n_samples = 30
+        test_data = np.arange(n_features*n_samples).reshape(
+            n_features, n_samples
+        )
+        sample_ids = [f"S{i}" for i in range(n_samples)]
+        obs_ids = [f"F{i}" for i in range(n_features)]
+        test_table = biom.Table(test_data, obs_ids, sample_ids)
+
+        continuous_target = pd.Series(
+            [i for i in range(n_samples)],
+            index=sample_ids
+        )
+        discrete_target = pd.Series(
+            np.tile([0, 1], int(n_samples/2)),
+            index=sample_ids
+        )
+
+        # Test Regression table
+        results, _, _ = q2_mlab._unit_benchmark(
+            table=test_table,
+            metadata=continuous_target,
+            algorithm="LinearSVR",
+            params=self.svr_params,
+            n_repeats=1
+        )
+        for sampleid in results.SAMPLE_ID:
+            self.assertTrue(sampleid in sample_ids)
+        for y in results.Y_TRUE:
+            self.assertTrue(y in list(test_data.flatten()))
+
+        # Test Classification table
+        results, _, _ = q2_mlab._unit_benchmark(
+            table=test_table,
+            metadata=discrete_target,
+            algorithm="LinearSVC",
+            params=self.svc_params,
+            n_repeats=1
+        )
+        for sampleid in results.SAMPLE_ID:
+            self.assertTrue(sampleid in sample_ids)
+        for y in results.Y_TRUE:
+            self.assertTrue(y in list(test_data.flatten()))
 
     def testKNNDistanceMatrix(self):
         pass

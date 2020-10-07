@@ -24,7 +24,10 @@ from sklearn.metrics import (
 from sklearn.pipeline import Pipeline
 from sklearn.neighbors import KNeighborsRegressor, KNeighborsClassifier
 from sklearn.linear_model import (
-    RidgeClassifier, Ridge, LogisticRegression, LinearRegression,
+    RidgeClassifier,
+    Ridge,
+    LogisticRegression,
+    LinearRegression,
 )
 from xgboost import XGBRegressor, XGBClassifier
 from sklearn.svm import LinearSVR, LinearSVC
@@ -57,6 +60,7 @@ class ModelFactory:
         class SpecificModel(model_class):
             def __init__(self, **kwargs):
                 super().__init__(**outer_kwargs, **kwargs)
+
         return SpecificModel
 
 
@@ -64,22 +68,22 @@ class ModelFactory:
 # `Lasso`'s classification equivalent is `LogisticRegression` with
 # `penalty='l1'`. You can use ModelFactory.get_model to create Estimator
 # classes that set specific parameters.
-LogisticRegressionLasso = ModelFactory.get_model(LogisticRegression,
-                                                 penalty='l1')
-LogisticRegressionElasticNet = ModelFactory.get_model(LogisticRegression,
-                                                      penalty='elasticnet')
-RadialSVR = ModelFactory.get_model(SVR, kernel='rbf')
-SigmoidSVR = ModelFactory.get_model(SVR, kernel='sigmoid')
-RadialSVC = ModelFactory.get_model(SVC, kernel='rbf')
-SigmoidSVC = ModelFactory.get_model(SVC, kernel='sigmoid')
-LGBMRegressorGBDT = ModelFactory.get_model(LGBMRegressor,
-                                           boosting_type='gbdt')
-LGBMRegressorRF = ModelFactory.get_model(LGBMRegressor,
-                                         boosting_type='rf')
-LGBMClassifierGBDT = ModelFactory.get_model(LGBMClassifier,
-                                            boosting_type='gbdt')
-LGBMClassifierRF = ModelFactory.get_model(LGBMClassifier,
-                                          boosting_type='rf')
+LogisticRegressionLasso = ModelFactory.get_model(
+    LogisticRegression, penalty="l1"
+)
+LogisticRegressionElasticNet = ModelFactory.get_model(
+    LogisticRegression, penalty="elasticnet"
+)
+RadialSVR = ModelFactory.get_model(SVR, kernel="rbf")
+SigmoidSVR = ModelFactory.get_model(SVR, kernel="sigmoid")
+RadialSVC = ModelFactory.get_model(SVC, kernel="rbf")
+SigmoidSVC = ModelFactory.get_model(SVC, kernel="sigmoid")
+LGBMRegressorGBDT = ModelFactory.get_model(LGBMRegressor, boosting_type="gbdt")
+LGBMRegressorRF = ModelFactory.get_model(LGBMRegressor, boosting_type="rf")
+LGBMClassifierGBDT = ModelFactory.get_model(
+    LGBMClassifier, boosting_type="gbdt"
+)
+LGBMClassifierRF = ModelFactory.get_model(LGBMClassifier, boosting_type="rf")
 
 
 class LearningTask(ABC):
@@ -118,11 +122,21 @@ class LearningTask(ABC):
         self.best_model = None
 
         self.results = {}
-        self.results["CV_IDX"] = np.zeros(self.table_size, dtype=int)
-        self.results["SAMPLE_ID"] = np.zeros(self.table_size, dtype=object)
-        self.results["Y_PRED"] = np.zeros(self.table_size, dtype=float)
-        self.results["Y_TRUE"] = np.zeros(self.table_size, dtype=object)
-        self.results["RUNTIME"] = np.zeros(self.table_size, dtype=float)
+        self.results["CV_IDX"] = np.full(
+            self.table_size, fill_value=np.nan, dtype=int
+        )
+        self.results["SAMPLE_ID"] = np.full(
+            self.table_size, fill_value=np.nan, dtype=object
+        )
+        self.results["Y_PRED"] = np.full(
+            self.table_size, fill_value=np.nan, dtype=float
+        )
+        self.results["Y_TRUE"] = np.full(
+            self.table_size, fill_value=np.nan, dtype=object
+        )
+        self.results["RUNTIME"] = np.full(
+            self.table_size, fill_value=np.nan, dtype=float
+        )
 
         # Check for sample id agreement between table and metadata
         if list(metadata.index) != list(table.ids()):
@@ -185,11 +199,21 @@ class ClassificationTask(LearningTask):
 
         for n in list(range(self.n_classes)):
             colname = "PROB_CLASS_" + str(n)
-            self.results[colname] = np.zeros(self.table_size, dtype=float)
-        self.results["ACCURACY"] = np.zeros(self.table_size, dtype=float)
-        self.results["AUPRC"] = np.zeros(self.table_size, dtype=float)
-        self.results["AUROC"] = np.zeros(self.table_size, dtype=float)
-        self.results["F1"] = np.zeros(self.table_size, dtype=float)
+            self.results[colname] = np.full(
+                self.table_size, fill_value=np.nan, dtype=float
+            )
+        self.results["ACCURACY"] = np.full(
+            self.table_size, fill_value=np.nan, dtype=float
+        )
+        self.results["AUPRC"] = np.full(
+            self.table_size, fill_value=np.nan, dtype=float
+        )
+        self.results["AUROC"] = np.full(
+            self.table_size, fill_value=np.nan, dtype=float
+        )
+        self.results["F1"] = np.full(
+            self.table_size, fill_value=np.nan, dtype=float
+        )
 
     def cv_fold(self, train_index, test_index):
         X_train, X_test = self.X[train_index], self.X[test_index]
@@ -305,9 +329,15 @@ class RegressionTask(LearningTask):
         )
         self.splits = kfold.split(X=self.X, y=self.y)
 
-        self.results["MAE"] = np.zeros(self.table_size, dtype=float)
-        self.results["RMSE"] = np.zeros(self.table_size, dtype=float)
-        self.results["R2"] = np.zeros(self.table_size, dtype=float)
+        self.results["MAE"] = np.full(
+            self.table_size, fill_value=np.nan, dtype=float
+        )
+        self.results["RMSE"] = np.full(
+            self.table_size, fill_value=np.nan, dtype=float
+        )
+        self.results["R2"] = np.full(
+            self.table_size, fill_value=np.nan, dtype=float
+        )
 
     def cv_fold(self, train_index, test_index):
         X_train, X_test = self.X[train_index], self.X[test_index]
@@ -330,7 +360,7 @@ class RegressionTask(LearningTask):
         self.results["RUNTIME"][curr_indices] = runtime
         self.results["CV_IDX"][curr_indices] = self.cv_idx
         self.results["Y_PRED"][curr_indices] = y_pred
-        self.results["Y_TRUE"][curr_indices] = y_test_ids
+        self.results["Y_TRUE"][curr_indices] = y_test
         self.results["SAMPLE_ID"][curr_indices] = y_test_ids
 
         if not self.contains_nan(y_pred):

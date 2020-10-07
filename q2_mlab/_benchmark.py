@@ -24,8 +24,6 @@ def _unit_benchmark(
     for entry_point in iter_entry_points():
         name = entry_point.name
         method = entry_point.load()
-        print(name, method)
-        print(method._estimator_type)
         # Check what algorithm type the custom method/pipeline has
         if method._estimator_type == "regressor":
             RegressionTask.algorithms.update({name: method})
@@ -56,6 +54,7 @@ def _unit_benchmark(
     results_table = worker.tabularize()
 
     return results_table, worker.best_model, worker.best_accuracy
+
 
 def unit_benchmark(
     table: biom.Table,
