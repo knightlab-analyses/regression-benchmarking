@@ -45,11 +45,31 @@ target_map = {
     'BMI': 'bmi',
 }
 
+TARGET_SD = {
+    # entries are (dataset, target, CV_IDX): number
+    ('finrisk', 'age', 0): 1,
+    ('sol', 'bmi', 1): 1,
+}
+
+
+def _get_standardized_mae(df_row, norm_dict):
+    """
+    """
+    mae = df_row['MAE']
+    target = df_row['target']
+    dataset = df_row['dataset']
+    cv_fold = df_row['CV_IDX']
+    sd = norm_dict.get((dataset, target, cv_fold), 1)
+    standardized_mae = mae / sd
+    return standardized_mae
+
 
 def process_db_df(df):
     # remap values for consistency
     df['level'] = df['level'].replace('none', 'MG')
     df['target'] = df['target'].map(target_map)
+    df['standardized_MAE'] = df.apply(_get_standardized_mae, axis=1,
+                                      args=(TARGET_SD,))
 
     group_stats = df.drop(
         drop_cols, axis=1
