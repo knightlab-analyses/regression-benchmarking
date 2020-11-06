@@ -47,8 +47,8 @@ target_map = {
 
 TARGET_SD = {
     # entries are (dataset, target, CV_IDX): number
-    ('finrisk', 'age', 0): 1,
-    ('sol', 'bmi', 1): 1,
+    ('finrisk', 'age', '16S', 0): 1,
+    ('sol', 'bmi', 'MG', 1): 1,
 }
 
 
@@ -59,7 +59,8 @@ def _get_standardized_mae(df_row, norm_dict):
     target = df_row['target']
     dataset = df_row['dataset']
     cv_fold = df_row['CV_IDX']
-    sd = norm_dict.get((dataset, target, cv_fold), 1)
+    level = df_row['level']
+    sd = norm_dict.get((dataset, target, level, cv_fold), 1)
     standardized_mae = mae / sd
     return standardized_mae
 

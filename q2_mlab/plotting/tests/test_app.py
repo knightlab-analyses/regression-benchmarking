@@ -11,11 +11,12 @@ class TestAppUtils(unittest.TestCase):
             'MAE': [1, 2, 3, 4],
             'target': ['bmi', 'age', 'bmi', 'age'],
             'dataset': ['finrisk', 'finrisk', 'sol', 'sol'],
+            'level': ['16S', '16S', 'MG', 'MG'],
             'CV_IDX': [0, 0, 1, 0]
         })
         norms = {
-            ('finrisk', 'age', 0): 2,
-            ('sol', 'bmi', 1): 0.5,
+            ('finrisk', 'age', '16S', 0): 2,
+            ('sol', 'bmi', 'MG', 1): 0.5,
         }
         obs0 = _get_standardized_mae(df.iloc[0, :], norms)
         self.assertEqual(1, obs0)
