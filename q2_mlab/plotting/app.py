@@ -4,6 +4,8 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 import sqlite3
 import click
+import json
+import pkg_resources
 
 from q2_mlab.db.schema import RegressionScore
 from q2_mlab.plotting.components import (
@@ -41,12 +43,17 @@ drop_cols = ['artifact_uuid', 'datetime', 'CV_IDX', 'id']
 target_map = {
     'age_v2': 'age',
     'BL_AGE': 'age',
+    'age': 'age',
     'bmi_v2': 'bmi',
     'BMI': 'bmi',
+    'bmi': 'bmi'
 }
 
-with open("standard_deviations.json") as f:
+with pkg_resources.resource_stream(
+    __name__, "standard_deviations.json"
+) as f:
     TARGET_SD = json.load(f)
+
 
 def _get_standardized_mae(df_row, norm_dict):
     """
