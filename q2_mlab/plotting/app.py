@@ -45,12 +45,8 @@ target_map = {
     'BMI': 'bmi',
 }
 
-TARGET_SD = {
-    # entries are (dataset, target, CV_IDX): number
-    "(finrisk, age, 16S, 0)": 1,
-    "(sol, bmi, MG, 1)": 1,
-}
-
+with open("standard_deviations.json") as f:
+    TARGET_SD = json.load(f)
 
 def _get_standardized_mae(df_row, norm_dict):
     """
