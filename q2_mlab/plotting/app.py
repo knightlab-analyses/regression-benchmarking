@@ -6,6 +6,7 @@ import sqlite3
 import click
 import json
 import pkg_resources
+from itertools import combinations
 
 from q2_mlab.db.schema import RegressionScore
 from q2_mlab.plotting.components import (
@@ -344,6 +345,14 @@ class AlgorithmScatter(Mediator, Plottable):
         datasets = sorted(df['dataset'].unique())
         targets = sorted(df['target'].unique())
         plot_width = 600
+        self.line_segment_pairs = {
+            'level': ['16S', 'MG'],
+            'target': ['age', 'bmi'],
+        }
+        dataset_combinations = combinations(["finrisk", "imsms", "sol"], r=2)
+        for dataset_pair in dataset_combinations:
+            d1, d2 = dataset_pair
+            self.line_segment_pairs[f"{d1}-to-{d2}"] = [d1, d2]
 
         categorical_variables = ['parameters_id', 'target', 'algorithm',
                                  'level', 'dataset']
