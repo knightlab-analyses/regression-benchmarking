@@ -170,50 +170,33 @@ HOVER_CALLBACK_TEMPLATE = \
         }}
     }}
     
-    // hover.tooltips = {tooltips};
     var tooltips = {tooltips};
-    var newTooltips = [...tooltips];
-    var element = document.getElementById("tooltips-go-here");
-    element.style.padding = "10px 30px";
+    var element = document.getElementById("tooltip-display");
     clearChildren(element);
+    
     if (cb_data.index.indices.length > 0) {{
         var tipsToRemove = new Array();
         var indices = cb_data.index.indices;
-        // check if each tip is in any of the selected indices
+        // check if each tip is in the selected index
         for (const tip of tooltips) {{
             var allNaN = true;
             var tipName = tip[0];
-            // iterate over points that are being hovered over
+            
+            // just display the value for the first of the selected indices
             const index = indices[0];
-            // for (const index of indices) {{
-                var value = source.data[tipName][index];
-                if (!isNaN(value)) {{
-                    var node = document.createElement("li")
-                    var textnode = document.createTextNode(
-                            tipName + ': ' + value
-                        ); 
-                    node.appendChild(textnode);
-                    element.appendChild(node);
-                    allNaN = false;
-                }}
-            // }}
-            // if (allNaN) {{
-            //     // remove the tip from tooltips
-            //     tipsToRemove.push(tip);
-            // }}
+            
+            var value = source.data[tipName][index];
+            if (!isNaN(value)) {{
+                var node = document.createElement("li")
+                var textnode = document.createTextNode(
+                        tipName + ': ' + value
+                    ); 
+                node.appendChild(textnode);
+                element.appendChild(node);
+                allNaN = false;
+            }}
         }}
-        
-        // for (const tipToRemove of tipsToRemove) {{
-        //     const removeIndex = newTooltips.indexOf(tipToRemove);
-        //     if (removeIndex > -1) {{
-        //         newTooltips.splice(removeIndex, 1);
-        //     }}
-        // }}
     }} 
-    //hover.tooltips = newTooltips;
-    // hover.tooltips.splice(0, hover.tooltips.length);
-    //hover.tooltips.push(["algorithm", "@algorithm"]);
-    
     """
 
 
@@ -469,7 +452,8 @@ class AlgorithmScatter(Mediator, Plottable):
         TOOLTIPS.extend(GENERIC_TOOLTIPS)
         scatter_hover = HoverTool(
             renderers=[self.scatter.scatter],
-            # tooltips=GENERIC_TOOLTIPS,
+            # add a dummy tooltip div so the tool knows to call its callback
+            # on hover
             tooltips="""
             <div id="@algorithm"></div>
             """
@@ -481,10 +465,9 @@ class AlgorithmScatter(Mediator, Plottable):
         )
 
         ## custom off-the-plot tooltip
-
+        # add a div that the tooltip info can be added to
         custom_tooltip = Div(text="""
-            <div id="tooltips-go-here">
-                woo! 
+            <div id="tooltip-display" style="padding:10px 30px">
             </div>  
         """)
 
