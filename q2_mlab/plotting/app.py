@@ -1,11 +1,10 @@
 from functools import partialmethod
 import pandas as pd
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 import sqlite3
 import click
 
-from q2_mlab.db.schema import RegressionScore
+from q2_mlab.db.schema import RegressionScore, Parameters
 from q2_mlab.plotting.components import (
     Mediator,
     ComponentMixin,
@@ -24,6 +23,8 @@ from bokeh.models import (
     TextInput,
     Legend,
     LegendItem,
+    HoverTool,
+    CustomJS,
 )
 from bokeh.models.widgets import (
     Div,
@@ -161,6 +162,43 @@ DEFAULTS = {
     'cmap': 'Category20'
 }
 
+HOVER_CALLBACK_TEMPLATE = \
+    """
+    function clearChildren(parent) {{
+        while (parent.firstChild) {{
+            parent.removeChild(parent.firstChild);
+        }}
+    }}
+    
+    var tooltips = {tooltips};
+    var element = document.getElementById("tooltip-display");
+    clearChildren(element);
+    
+    if (cb_data.index.indices.length > 0) {{
+        var tipsToRemove = new Array();
+        var indices = cb_data.index.indices;
+        // check if each tip is in the selected index
+        for (const tip of tooltips) {{
+            var allNaN = true;
+            var tipName = tip[0];
+            
+            // just display the value for the first of the selected indices
+            const index = indices[0];
+            
+            var value = source.data[tipName][index];
+            if (!isNaN(value)) {{
+                var node = document.createElement("li")
+                var textnode = document.createTextNode(
+                        tipName + ': ' + value
+                    ); 
+                node.appendChild(textnode);
+                element.appendChild(node);
+                allNaN = false;
+            }}
+        }}
+    }} 
+    """
+
 
 class AlgorithmScatter(Mediator, Plottable):
 
@@ -206,6 +244,7 @@ class AlgorithmScatter(Mediator, Plottable):
         self.target_bars = None
         self.target_bars_source = None
         self.target_bars_figure = None
+        self.parameters = None
         self.query_button = None
         self.query_input = None
         self.query_row = None
@@ -302,7 +341,15 @@ class AlgorithmScatter(Mediator, Plottable):
         self.data_raw = self.data_raw.loc[
             self.data_raw['algorithm'] != 'MLPRegressor'
             ]
-        self.data = df = process_db_df(self.data_raw)
+        processed_df = process_db_df(self.data_raw)
+        self.parameters = pd.read_sql_table(Parameters.__tablename__,
+                                            con=self.engine,
+                                            )
+        self.parameters.rename({'id': 'parameters_id'}, axis=1)
+        self.data = df = processed_df.join(
+            self.parameters,
+            on='parameters_id',
+        )
         self.data_static = df
         self.seg_0, self.seg_1 = self.line_segment_pairs[
             self.line_segment_variable
@@ -390,6 +437,42 @@ class AlgorithmScatter(Mediator, Plottable):
             figure=self.segment.layout,
             scatter_kwargs=scatter_kwargs,
         )
+        parameter_columns = [col.key for col in Parameters.__table__.columns]
+        ignore_parameters = {"id"}
+        TOOLTIPS = [
+            [col, "@" + col] for col in parameter_columns
+            if col not in ignore_parameters
+        ]
+        GENERIC_TOOLTIPS = [
+            ['algorithm', '@algorithm'],
+            ['dataset', '@dataset'],
+            ['level', '@level'],
+            ['target', '@target']
+        ]
+        TOOLTIPS.extend(GENERIC_TOOLTIPS)
+        scatter_hover = HoverTool(
+            renderers=[self.scatter.scatter],
+            # add a dummy tooltip div so the tool knows to call its callback
+            # on hover
+            tooltips="""
+            <div id="@algorithm"></div>
+            """
+        )
+        js_callback_code = HOVER_CALLBACK_TEMPLATE.format(tooltips=TOOLTIPS)
+        hover_callback = CustomJS(
+            args=dict(source=scatter_source, hover=scatter_hover),
+            code=js_callback_code
+        )
+
+        ## custom off-the-plot tooltip
+        # add a div that the tooltip info can be added to
+        custom_tooltip = Div(text="""
+            <div id="tooltip-display" style="padding:10px 30px">
+            </div>  
+        """)
+
+        scatter_hover.callback = hover_callback
+        self.scatter.layout.add_tools(scatter_hover)
 
         scatter = self.scatter.layout
 
@@ -522,7 +605,10 @@ class AlgorithmScatter(Mediator, Plottable):
                 variable_selection,
                 segment_selection,
                 row(
-                    scatter,
+                    column(
+                        scatter,
+                        custom_tooltip,
+                    ),
                     column(
                         self.dataset_bars_figure,
                         self.level_bars_figure,
@@ -609,3 +695,23 @@ def run_app(db, color_scheme):
     server.start()
     server.io_loop.add_callback(server.show, "/")
     server.io_loop.start()
+
+
+if __name__ == "__main__":
+    from bokeh.server.server import Server
+    import sys
+    db_file = sys.argv[1]
+    def connect():
+        return sqlite3.connect(f"file:{db_file}?mode=ro", uri=True)
+
+    engine = create_engine("sqlite://", creator=connect)
+    bkapp = AlgorithmScatter(
+        DEFAULTS['x'], DEFAULTS['y'],
+        engine=engine,
+        cmap=palettes[DEFAULTS['cmap']],
+    ).plot().app
+    server = Server({'/': bkapp})
+    server.start()
+    server.io_loop.add_callback(server.show, "/")
+    server.io_loop.start()
+
