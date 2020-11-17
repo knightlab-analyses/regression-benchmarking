@@ -164,9 +164,18 @@ DEFAULTS = {
 
 HOVER_CALLBACK_TEMPLATE = \
     """
+    function clearChildren(parent) {{
+        while (parent.firstChild) {{
+            parent.removeChild(parent.firstChild);
+        }}
+    }}
+    
     // hover.tooltips = {tooltips};
     var tooltips = {tooltips};
     var newTooltips = [...tooltips];
+    var element = document.getElementById("tooltips-go-here");
+    element.style.padding = "10px 30px";
+    clearChildren(element);
     if (cb_data.index.indices.length > 0) {{
         var tipsToRemove = new Array();
         var indices = cb_data.index.indices;
@@ -175,25 +184,36 @@ HOVER_CALLBACK_TEMPLATE = \
             var allNaN = true;
             var tipName = tip[0];
             // iterate over points that are being hovered over
-            for (const index of indices) {{
+            const index = indices[0];
+            // for (const index of indices) {{
                 var value = source.data[tipName][index];
                 if (!isNaN(value)) {{
+                    var node = document.createElement("li")
+                    var textnode = document.createTextNode(
+                            tipName + ': ' + value
+                        ); 
+                    node.appendChild(textnode);
+                    element.appendChild(node);
                     allNaN = false;
                 }}
-            }}
-            if (allNaN) {{
-                // remove the tip from tooltips
-                tipsToRemove.push(tip);
-            }}
+            // }}
+            // if (allNaN) {{
+            //     // remove the tip from tooltips
+            //     tipsToRemove.push(tip);
+            // }}
         }}
-        for (const tipToRemove of tipsToRemove) {{
-            const removeIndex = newTooltips.indexOf(tipToRemove);
-            if (removeIndex > -1) {{
-                newTooltips.splice(removeIndex, 1);
-            }}
-        }}
+        
+        // for (const tipToRemove of tipsToRemove) {{
+        //     const removeIndex = newTooltips.indexOf(tipToRemove);
+        //     if (removeIndex > -1) {{
+        //         newTooltips.splice(removeIndex, 1);
+        //     }}
+        // }}
     }} 
-    hover.tooltips = newTooltips;
+    //hover.tooltips = newTooltips;
+    // hover.tooltips.splice(0, hover.tooltips.length);
+    //hover.tooltips.push(["algorithm", "@algorithm"]);
+    
     """
 
 
@@ -340,7 +360,7 @@ class AlgorithmScatter(Mediator, Plottable):
             ]
         processed_df = process_db_df(self.data_raw)
         self.parameters = pd.read_sql_table(Parameters.__tablename__,
-                                            con=engine,
+                                            con=self.engine,
                                             )
         self.parameters.rename({'id': 'parameters_id'}, axis=1)
         self.data = df = processed_df.join(
@@ -440,20 +460,34 @@ class AlgorithmScatter(Mediator, Plottable):
             [col, "@" + col] for col in parameter_columns
             if col not in ignore_parameters
         ]
-        TOOLTIPS.extend([
+        GENERIC_TOOLTIPS = [
             ['algorithm', '@algorithm'],
             ['dataset', '@dataset'],
-            ['level', '@level']
-        ])
+            ['level', '@level'],
+            ['target', '@target']
+        ]
+        TOOLTIPS.extend(GENERIC_TOOLTIPS)
         scatter_hover = HoverTool(
             renderers=[self.scatter.scatter],
-            tooltips=None,
+            # tooltips=GENERIC_TOOLTIPS,
+            tooltips="""
+            <div id="@algorithm"></div>
+            """
         )
         js_callback_code = HOVER_CALLBACK_TEMPLATE.format(tooltips=TOOLTIPS)
         hover_callback = CustomJS(
             args=dict(source=scatter_source, hover=scatter_hover),
             code=js_callback_code
         )
+
+        ## custom off-the-plot tooltip
+
+        custom_tooltip = Div(text="""
+            <div id="tooltips-go-here">
+                woo! 
+            </div>  
+        """)
+
         scatter_hover.callback = hover_callback
         self.scatter.layout.add_tools(scatter_hover)
 
@@ -588,7 +622,10 @@ class AlgorithmScatter(Mediator, Plottable):
                 variable_selection,
                 segment_selection,
                 row(
-                    scatter,
+                    column(
+                        scatter,
+                        custom_tooltip,
+                    ),
                     column(
                         self.dataset_bars_figure,
                         self.level_bars_figure,
