@@ -1,5 +1,6 @@
 from .schema import (
     RegressionScore,
+    ClassificationScore,
     Parameters,
 )
 
@@ -10,5 +11,6 @@ __all__ = [
     'schema',
     'mapping',
     'RegressionScore',
+    'ClassificationScore',
     'Parameters',
 ]

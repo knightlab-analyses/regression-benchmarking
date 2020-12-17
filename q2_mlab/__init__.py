@@ -13,6 +13,7 @@ from .learningtask import LearningTask, ClassificationTask, RegressionTask
 from ._type import Target, Results
 from ._format import ResultsDirectoryFormat, ResultsFormat
 from ._parameters import ParameterGrids
+from .orchestrator import orchestrate_hyperparameter_search
 
 __version__ = get_versions()["version"]
 
@@ -22,6 +23,7 @@ __all__ = [
     "preprocess",
     "unit_benchmark",
     "_unit_benchmark",
+    "orchestrate_hyperparameter_search",
     "ResultsDirectoryFormat",
     "ResultsFormat",
     "Target",

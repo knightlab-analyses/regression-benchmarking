@@ -49,6 +49,12 @@ max_size="$(wc -l <${input})"
 max_n_chunks=$((($max_size/$chunk_size)+1))
 offset=$(($chunk_size * $PBS_ARRAYID))
 
+# If PBS_ARRAYID is > max_n_chunks, then exit
+if [ ${PBS_ARRAYID} -gt ${max_n_chunks} ]
+then
+    exit 0
+fi
+
 # If we are on the last possible chunk, set its size
 # to the number of remaining params
 if [ ${PBS_ARRAYID} = ${max_n_chunks} ]
@@ -68,8 +74,18 @@ head -n $offset $input | tail -n $chunk_size > ${SUBSETLIST}
 FORCE={{ FORCE_OVERWRITE }}
 while IFS=$'\t' read -r idx params
 do 
-    RESULTS={{ RESULTS_DIR }}/${idx}_chunk_${PBS_ARRAYID}
-    if [[ -f $RESULTS.qza && ${FORCE} = false ]]
+    RESULTS={{ RESULTS_DIR }}/${idx}_chunk_${PBS_ARRAYID}.qza
+    INSERTED_RESULTS={{ RESULTS_DIR }}/inserted/${idx}_chunk_${PBS_ARRAYID}.qza
+    RESULTS_EXIST=false
+    
+    # Check if results exist
+    if [[ -f ${RESULTS} || -f ${INSERTED_RESULTS} ]]
+    then
+        RESULTS_EXIST=true
+    fi
+
+    # Only skip execution if results exist and we aren't forcing it.
+    if [[ ${RESULTS_EXIST} = true && ${FORCE} = false ]]
     then
         echo $RESULTS already exists, execution skipped
     else

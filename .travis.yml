@@ -14,8 +14,8 @@ install:
   - wget -q https://raw.githubusercontent.com/qiime2/environment-files/master/2020.8/release/qiime2-2020.8-py36-linux-conda.yml
   - conda env create -q -n test-env --file qiime2-2020.8-py36-linux-conda.yml
   - source activate test-env
-  - conda install -q pytest-cov
-  - conda install -q -c conda-forge xgboost tqdm 'lightgbm<3' sqlalchemy
+  - conda install -q pytest-cov bokeh
+  - conda install -q -c conda-forge xgboost tqdm 'lightgbm<3' sqlalchemy pyyaml
   - pip install -q flake8 coveralls
   - make install
 script:

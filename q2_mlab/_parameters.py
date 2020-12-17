@@ -1,6 +1,6 @@
 import numpy as np
 from sklearn.model_selection import ParameterGrid
-from itertools import combinations
+from itertools import product
 
 
 class ParameterGrids:
@@ -17,7 +17,7 @@ class ParameterGrids:
     mlp_hidden_layer_grids = []
     hidden_layer_sizes = [10, 50, 100, 200, 500]
     for r in range(1, 4):
-        for comb in combinations(hidden_layer_sizes, r):
+        for comb in product(hidden_layer_sizes, repeat=r):
             mlp_hidden_layer_grids.append(comb)
 
     # Notes:

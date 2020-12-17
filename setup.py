@@ -23,6 +23,7 @@ setup(
         'qiime2.plugins': ['q2-mlab=q2_mlab.plugin_setup:plugin'],
         'console_scripts': ['orchestrator=q2_mlab.orchestrator:cli',
                             'mlab-db=q2_mlab.db.cli:mlab_db',
+                            'mlab-plotting=q2_mlab.plotting.app:mlab_plotting',
                             ],
     },
     package_data={'q2_mlab': ['assets/index.html',
@@ -41,5 +42,7 @@ setup(
         'biom-format',
         'lightgbm',
         'sqlalchemy',
+        'bokeh',
+        'pyyaml',
     ]
 )

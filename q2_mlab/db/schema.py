@@ -38,6 +38,20 @@ class RegressionScore(Base, Score):
     parameters_id = Column(Integer, ForeignKey('parameters.id'))
 
 
+class ClassificationScore(Base, Score):
+
+    __tablename__ = 'classification'
+
+    ACCURACY = Column(Float)
+    AUPRC = Column(Float)
+    AUROC = Column(Float)
+    F1 = Column(Float)
+    PROB_CLASS_0 = Column(Float)
+    PROB_CLASS_1 = Column(Float)
+
+    parameters_id = Column(Integer, ForeignKey('parameters.id'))
+
+
 class Parameters(Base):
     __tablename__ = 'parameters'
 

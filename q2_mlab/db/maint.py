@@ -4,9 +4,15 @@ from sqlalchemy import create_engine as sql_create_engine
 from sqlalchemy.orm import sessionmaker as sql_sessionmaker
 from datetime import datetime
 from qiime2 import Artifact
-from q2_mlab.db.schema import RegressionScore, Parameters, Base
+from q2_mlab.db.schema import (
+    Score,
+    RegressionScore,
+    ClassificationScore,
+    Parameters,
+    Base,
+)
 from q2_mlab.db.mapping import remap_parameters
-from q2_mlab.learningtask import RegressionTask
+from q2_mlab.learningtask import RegressionTask, ClassificationTask
 from typing import Optional, Callable
 
 
@@ -50,6 +56,42 @@ def sessionmaker(db_file=None, engine=None, echo=False):
     return Session
 
 
+def get_table_from_algorithm(algorithm: str) -> Score:
+    # check if algorithm is valid, and of regression or classification
+    # and assign Table to the corresponding Regression or Classification table
+    valid_algorithms = set(RegressionTask.algorithms).union(
+        set(ClassificationTask.algorithms)
+    )
+    if algorithm in RegressionTask.algorithms:
+        Table = RegressionScore
+    elif algorithm in ClassificationTask.algorithms:
+        Table = ClassificationScore
+    else:
+        raise ValueError(
+            f"Invalid choice '{algorithm}' for algorithm."
+            f"Valid choices: {valid_algorithms}."
+        )
+    return Table
+
+
+def uuid_is_unique(engine: Engine, artifact_uuid: str, algorithm: str) -> bool:
+
+    Session = sessionmaker(engine=engine)
+    session = Session()
+
+    Table = get_table_from_algorithm(algorithm)
+
+    query = session.query(Table).filter_by(
+        artifact_uuid=artifact_uuid
+    )
+    matching_artifact = query.first()
+    session.close()
+    if matching_artifact is None:
+        return True
+    else:
+        return False
+
+
 def add(engine: Engine, results: pd.DataFrame, parameters: dict,
         dataset: str, target: str, level: str, algorithm: str,
         artifact_uuid: str,
@@ -68,24 +110,20 @@ def add(engine: Engine, results: pd.DataFrame, parameters: dict,
     session.flush()
     params_id = params.id
 
-    # check if algorithm is valid
-    valid_algorithms = RegressionTask.algorithms
-    if algorithm not in valid_algorithms:
-        raise ValueError(f"Invalid choice '{algorithm}' for algorithm."
-                         f"Valid choices: {valid_algorithms}."
-                         )
+    Table = get_table_from_algorithm(algorithm)
 
     time = datetime.now()
     for entry in results.iterrows():
-        score = RegressionScore(datetime=time,
-                                parameters_id=params_id,
-                                dataset=dataset,
-                                target=target,
-                                level=level,
-                                algorithm=algorithm,
-                                artifact_uuid=artifact_uuid,
-                                **entry[1],
-                                )
+        score = Table(
+            datetime=time,
+            parameters_id=params_id,
+            dataset=dataset,
+            target=target,
+            level=level,
+            algorithm=algorithm,
+            artifact_uuid=artifact_uuid,
+            **entry[1],
+        )
         session.add(score)
 
     session.commit()
@@ -99,13 +137,24 @@ def add_from_qza(artifact: Artifact,
                  algorithm: str,
                  db_file: Optional[str] = None,
                  echo: bool = True,
+                 allow_duplicate_uuids: bool = True,
                  engine_creator: Callable = create_engine,
-                 ):
+                 ) -> Engine:
 
     engine = engine_creator(db_file, echo=echo)
 
     results = artifact.view(pd.DataFrame)
     artifact_uuid = str(artifact.uuid)
+
+    if not allow_duplicate_uuids:
+        # check if this uuid is in the table
+        uuid_unique = uuid_is_unique(engine, artifact_uuid, algorithm)
+        if not uuid_unique:
+            raise ValueError(
+                f"Supplied artifact {artifact_uuid} is already "
+                f"contained in the table."
+            )
+
     # perform filtering on results (single entry per cross validation)
     results.drop(DROP_COLS, axis=1, inplace=True)
     results.drop_duplicates(inplace=True)
