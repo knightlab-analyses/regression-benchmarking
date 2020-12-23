@@ -32,7 +32,7 @@ class UnitBenchmarkTests(TestPluginBase):
         self.distance_matrix = Artifact.load(distance_matrix)
         self.n_repeats = 1
         n_classes = self.metadata.nunique()
-        self.ncols_classification = 9 + n_classes
+        self.ncols_classification = 10 + n_classes
         self.ncols_regression = 8
 
         LinearSVR_grids = {
