@@ -18,6 +18,7 @@ from sklearn.metrics import (
     precision_recall_curve,
     auc,
     f1_score,
+    balanced_accuracy_score
 )
 
 # Algorithms
@@ -214,6 +215,9 @@ class ClassificationTask(LearningTask):
         self.results["F1"] = np.full(
             self.table_size, fill_value=np.nan, dtype=float
         )
+        self.results["BALANCED_ACCURACY"] = np.full(
+            self.table_size, fill_value=np.nan, dtype=float
+        )
 
     def cv_fold(self, train_index, test_index):
         X_train, X_test = self.X[train_index], self.X[test_index]
@@ -257,10 +261,19 @@ class ClassificationTask(LearningTask):
             self.results["AUROC"][curr_indices] = np.nan
             self.results["ACCURACY"][curr_indices] = np.nan
             self.results["F1"][curr_indices] = np.nan
+            self.results["BALANCED_ACCURACY"][curr_indices] = np.nan
         elif not use_probabilities:
-            # Just F1 and Accuracy
-            acc_score = accuracy_score(y_pred, y_test)
+            # Just F1, Accuracy, Balanced Accuracy
+            acc_score = accuracy_score(
+                y_true=y_test, y_pred=y_pred
+            )
             self.results["ACCURACY"][curr_indices] = acc_score
+
+            balanced_acc = balanced_accuracy_score(
+                y_true=y_test, y_pred=y_pred
+            )
+            self.results["BALANCED_ACCURACY"][curr_indices] = balanced_acc
+
             f1 = f1_score(y_test, y_pred)
             self.results["F1"][curr_indices] = f1
 
@@ -273,8 +286,17 @@ class ClassificationTask(LearningTask):
             precision, recall, _ = precision_recall_curve(y_test, probas)
             self.results["AUPRC"][curr_indices] = auc(recall, precision)
             self.results["AUROC"][curr_indices] = roc_auc_score(y_test, probas)
-            acc_score = accuracy_score(y_pred, y_test)
+
+            acc_score = accuracy_score(
+                y_true=y_test, y_pred=y_pred
+            )
             self.results["ACCURACY"][curr_indices] = acc_score
+
+            balanced_acc = balanced_accuracy_score(
+                y_true=y_test, y_pred=y_pred
+            )
+            self.results["BALANCED_ACCURACY"][curr_indices] = balanced_acc
+
             f1 = f1_score(y_test, y_pred)
             self.results["F1"][curr_indices] = f1
 
