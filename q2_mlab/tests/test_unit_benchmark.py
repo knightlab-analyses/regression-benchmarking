@@ -32,8 +32,20 @@ class UnitBenchmarkTests(TestPluginBase):
         self.distance_matrix = Artifact.load(distance_matrix)
         self.n_repeats = 1
         self.n_classes = self.metadata.view(pd.Series).nunique()
-        self.ncols_classification = 9 + self.n_classes
+        self.ncols_classification = 10 + self.n_classes
         self.ncols_regression = 8
+        self.expected_classification_cols = [
+            "CV_IDX",
+            "SAMPLE_ID",
+            "Y_PRED",
+            "Y_TRUE",
+            "RUNTIME",
+            "ACCURACY",
+            "AUPRC",
+            "AUROC",
+            "F1",
+            "BALANCED_ACCURACY",
+        ] + ["PROB_CLASS_" + str(i) for i in range(self.n_classes)]
 
         LinearSVR_grids = {
             "C": [1e-4, 1e-2, 1e-1, 1e1, 1e2, 1e4],
@@ -97,18 +109,9 @@ class UnitBenchmarkTests(TestPluginBase):
         self.assertTupleEqual(results_df.shape, expected_shape)
 
         # Assert columns exist and are null
-        expected_cols = [
-            "CV_IDX",
-            "SAMPLE_ID",
-            "Y_PRED",
-            "Y_TRUE",
-            "RUNTIME",
-            "ACCURACY",
-            "AUPRC",
-            "AUROC",
-            "F1",
-        ] + ["PROB_CLASS_" + str(i) for i in range(self.n_classes)]
-        self.assertCountEqual(list(results_df.columns), expected_cols)
+        self.assertCountEqual(
+            list(results_df.columns), self.expected_classification_cols
+        )
 
     def testClassificationWithProba(self):
 
@@ -131,18 +134,9 @@ class UnitBenchmarkTests(TestPluginBase):
         )
         self.assertTupleEqual(results_df.shape, expected_shape)
 
-        expected_cols = [
-            "CV_IDX",
-            "SAMPLE_ID",
-            "Y_PRED",
-            "Y_TRUE",
-            "RUNTIME",
-            "ACCURACY",
-            "AUPRC",
-            "AUROC",
-            "F1",
-        ] + ["PROB_CLASS_" + str(i) for i in range(self.n_classes)]
-        self.assertCountEqual(list(results_df.columns), expected_cols)
+        self.assertCountEqual(
+            list(results_df.columns), self.expected_classification_cols
+        )
 
     def testNoDistanceMatrix(self):
 
@@ -165,18 +159,9 @@ class UnitBenchmarkTests(TestPluginBase):
         self.assertTupleEqual(results_df.shape, expected_shape)
 
         # Assert columns exist and are null
-        expected_cols = [
-            "CV_IDX",
-            "SAMPLE_ID",
-            "Y_PRED",
-            "Y_TRUE",
-            "RUNTIME",
-            "ACCURACY",
-            "AUPRC",
-            "AUROC",
-            "F1",
-        ] + ["PROB_CLASS_" + str(i) for i in range(self.n_classes)]
-        self.assertCountEqual(list(results_df.columns), expected_cols)
+        self.assertCountEqual(
+            list(results_df.columns), self.expected_classification_cols
+        )
 
     def testReturnBestModel(self):
 
