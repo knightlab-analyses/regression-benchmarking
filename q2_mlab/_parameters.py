@@ -239,23 +239,27 @@ class ParameterGrids:
             "C": [1e-4, 1e-3, 1e-2, 1e-1, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7],
             "epsilon": [1e-5, 1e-4, 1e-3, 1e-2],
             "gamma": ["scale", "auto", 100, 10, 1, 1e-2, 1e-3, 1e-4, 1e-5],
+            "kernel": ["rbf"],
         },
         "RadialSVC": {
             "C": [1e-4, 1e-3, 1e-2, 1e-1, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7],
             "gamma": ["scale", "auto", 100, 10, 1, 1e-2, 1e-3, 1e-4, 1e-5],
             "probability": [True],
+            "kernel": ["rbf"],
         },
         "SigmoidSVR": {
             "C": [1e-4, 1e-3, 1e-2, 1e-1, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7],
             "epsilon": [1e-5, 1e-4, 1e-3, 1e-2],
             "gamma": ["scale", "auto", 100, 10, 1, 1e-2, 1e-3, 1e-4, 1e-5],
             "coef0": [0, 1, 10, 100],
+            "kernel": ["sigmoid"],
         },
         "SigmoidSVC": {
             "C": [1e-4, 1e-3, 1e-2, 1e-1, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7],
             "gamma": ["scale", "auto", 100, 10, 1, 1e-2, 1e-3, 1e-4, 1e-5],
             "coef0": [0, 1, 10, 100],
             "probability": [True],
+            "kernel": ["sigmoid"],
         },
         "RidgeClassifier": [
             {
