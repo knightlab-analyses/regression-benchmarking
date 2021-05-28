@@ -67,25 +67,14 @@ def orchestrate_hyperparameter_search(
             "following: \n" + str(valid_algorithms)
         )
 
-    if reduced:
-        try:
-            algorithm_parameters = ParameterGrids.get_reduced(ALGORITHM)
-        except KeyError:
-            print(
-                f"{ALGORITHM} does not have a reduced grid implemented grid "
-                "in mlab.ParameterGrids"
-            )
-            raise
-
-    else:
-        try:
-            algorithm_parameters = ParameterGrids.get(ALGORITHM)
-        except KeyError:
-            print(
-                f"{ALGORITHM} does not have a grid implemented in "
-                "mlab.ParameterGrids"
-            )
-            raise
+    try:
+        algorithm_parameters = ParameterGrids.get(ALGORITHM)
+    except KeyError:
+        print(
+            f"{ALGORITHM} does not have a grid implemented in "
+            "mlab.ParameterGrids"
+        )
+        raise
 
     PPN = ppn
     N_REPEATS = repeats

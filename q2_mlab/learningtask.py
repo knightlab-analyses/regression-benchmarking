@@ -1,5 +1,6 @@
 import json
 import numpy as np
+from numpy.lib.histograms import histogram_bin_edges
 import pandas as pd
 import time
 from abc import ABC
@@ -75,10 +76,6 @@ LogisticRegressionLasso = ModelFactory.get_model(
 LogisticRegressionElasticNet = ModelFactory.get_model(
     LogisticRegression, penalty="elasticnet"
 )
-RadialSVR = ModelFactory.get_model(SVR, kernel="rbf")
-SigmoidSVR = ModelFactory.get_model(SVR, kernel="sigmoid")
-RadialSVC = ModelFactory.get_model(SVC, kernel="rbf")
-SigmoidSVC = ModelFactory.get_model(SVC, kernel="sigmoid")
 LGBMRegressorGBDT = ModelFactory.get_model(LGBMRegressor, boosting_type="gbdt")
 LGBMRegressorRF = ModelFactory.get_model(LGBMRegressor, boosting_type="rf")
 LGBMClassifierGBDT = ModelFactory.get_model(
@@ -182,8 +179,8 @@ class ClassificationTask(LearningTask):
         "HistGradientBoostingClassifier": HistGradientBoostingClassifier,
         "MLPClassifier": MLPClassifier,
         "LinearSVC": LinearSVC,
-        "RadialSVC": RadialSVC,
-        "SigmoidSVC": SigmoidSVC,
+        "RadialSVC": SVC,
+        "SigmoidSVC": SVC,
         "RidgeClassifier": RidgeClassifier,
         "LogisticRegression_ElasticNet": LogisticRegressionElasticNet,
         "LogisticRegression_Lasso": LogisticRegressionLasso,
@@ -332,12 +329,11 @@ class RegressionTask(LearningTask):
         "ExtraTreesRegressor": ExtraTreesRegressor,
         "HistGradientBoostingRegressor": HistGradientBoostingRegressor,
         "LinearRegression": LinearRegression,
-        "LinearSVR": LinearSVR,
         "RidgeRegressor": Ridge,
         "MLPRegressor": MLPRegressor,
         "LinearSVR": LinearSVR,
-        "RadialSVR": RadialSVR,
-        "SigmoidSVR": SigmoidSVR,
+        "RadialSVR": SVR,
+        "SigmoidSVR": SVR,
         "ElasticNet": ElasticNet,
         "Lasso": Lasso,
         "LGBMRegressor_GBDT": LGBMRegressorGBDT,
