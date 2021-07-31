@@ -89,7 +89,7 @@ do
     then
         echo $RESULTS already exists, execution skipped
     else
-        qiime mlab unit-benchmark --i-table {{ TABLE_FP }} \
+        timeout -s SIGKILL 2h qiime mlab unit-benchmark --i-table {{ TABLE_FP }} \
             --i-metadata {{ METADATA_FP }} \
             --p-algorithm {{ ALGORITHM }} \
             --p-params "${params}" \
