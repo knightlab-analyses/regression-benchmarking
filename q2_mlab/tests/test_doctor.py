@@ -14,7 +14,8 @@ from q2_mlab import (
 
 
 class DoctorTests(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
 
         self.TEST_DIR = os.path.split(__file__)[0]
         self.dataset_file = os.path.join(self.TEST_DIR, "data/table.qza")
@@ -89,7 +90,8 @@ class DoctorTests(unittest.TestCase):
             inserted_path = os.path.join(inserted_dir, artifact)
             os.rename(uninserted_path, inserted_path)
 
-    def tearDown(self):
+    @classmethod
+    def tearDownClass(self):
 
         # Remove files we generated
         files_generated = [
@@ -169,20 +171,21 @@ class DoctorTests(unittest.TestCase):
         }
         self.assertDictEqual(info_dict, expected_dict)
 
-    def test_get_uninserted_results(self):
+    def test_getting_filtering_results(self):
+
+        # Test getting uninserted results 
         results_list = get_results(self.results_dir)
         for fname in results_list:
             self.assertTrue(fname.endswith(".qza"))
         self.assertEqual(len(results_list), 110)
 
-    def test_get_inserted_results(self):
+        # Test getting inserted results 
         inserted_dir = os.path.join(self.results_dir, "inserted")
         results_list = get_results(inserted_dir)
         for fname in results_list:
             self.assertTrue(fname.endswith(".qza"))
         self.assertEqual(len(results_list), 2)
 
-    def test_filter_duplicate_parameter_results(self):
         results_list = get_results(self.results_dir)
         self.assertEqual(len(results_list), 110)
         self.assertTrue(
